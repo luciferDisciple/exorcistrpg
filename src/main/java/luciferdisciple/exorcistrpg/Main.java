@@ -24,6 +24,7 @@
 package luciferdisciple.exorcistrpg;
 
 import com.googlecode.lanterna.SGR;
+import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
@@ -49,19 +50,25 @@ public class Main {
             screen = new TerminalScreen(terminal);
             screen.setCursorPosition(null); // hide the cursor
             screen.startScreen();
-            TextGraphics textGraphics = screen.newTextGraphics();
-            textGraphics.setForegroundColor(TextColor.ANSI.RED);
-            textGraphics.enableModifiers(SGR.BOLD);
-            putStringCentered(textGraphics, "Exorcist RPG    Press ESC to exit");
             screen.refresh();
             boolean exitRequested = false;
+            Game game = new Game(screen);
+            game.draw();
+            screen.refresh();
+            
+            // game loop begining
             while (!exitRequested) {
                 KeyStroke key = screen.pollInput();
                 if (key == null)
                     continue;
-                if (key.getKeyType() == KeyType.Escape)
+                else if (key.getKeyType() == KeyType.Escape)
                     exitRequested = true;
+                else
+                    game.handleInput(key);
+                    game.draw();
+                    screen.refresh();
             }
+            // game loop end
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -82,5 +89,117 @@ public class Main {
         int row = rows / 2;
         int col = (cols - s.length()) / 2;
         textGraphics.putString(col, row, s);
+    }
+}
+
+interface GameState {
+    public void draw();
+    public void handleInput(KeyStroke key);
+    public GameState getNextState();
+}
+
+class MainMenu implements GameState {
+
+    enum MainMenuItem {
+        NewGame("New Game"),
+        Controls("Controls"),
+        Quit("Quit");
+        
+        private final String name;
+        
+        MainMenuItem(String name) {
+            this.name = name;
+        }
+        
+        public String nameToDisplay() {
+            return " " + this.name + " ";
+        }
+    }
+    
+    private int currentItemIndex;
+    private final Screen screen;
+    private final int ITEM_VERTICAL_OFFSET = 3;
+    
+    public MainMenu(Screen screen) {
+        this.screen = screen;
+        this.currentItemIndex = 0;
+    }
+    
+    @Override
+    public void draw() {
+        screen.clear();
+        TerminalPosition cursorPosition = new TerminalPosition(10, 5);
+        TextGraphics textGraphics = screen.newTextGraphics();
+        textGraphics.setForegroundColor(TextColor.ANSI.RED);
+        
+        MainMenuItem currentItem = getCurrentItem();
+        for (MainMenuItem item : MainMenuItem.values()) {
+            if (item == currentItem) {
+                textGraphics.putString(
+                    cursorPosition,
+                    item.nameToDisplay(),
+                    SGR.REVERSE,
+                    SGR.BOLD
+                );
+            }
+            else {
+                textGraphics.putString(cursorPosition, item.nameToDisplay(), SGR.BOLD);
+            }
+            cursorPosition = cursorPosition.withRelativeRow(ITEM_VERTICAL_OFFSET);
+        }
+    }
+
+    @Override
+    public void handleInput(KeyStroke key) {
+        switch (key.getKeyType()) {
+            case ArrowDown:
+                selectNextItem();
+                break;
+            case ArrowUp:
+                selectPreviousItem();
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public GameState getNextState() {
+        return this;
+    }
+    
+    private MainMenuItem getCurrentItem() {
+        return MainMenuItem.values()[this.currentItemIndex];
+    }
+    
+    private void selectNextItem() {
+        int lastIndex = MainMenuItem.values().length - 1;
+        if (this.currentItemIndex == lastIndex)
+            return;
+        this.currentItemIndex++;
+    }
+    
+    private void selectPreviousItem() {
+        if (this.currentItemIndex == 0)
+            return;
+        this.currentItemIndex--;
+    }
+}
+
+class Game {
+    private GameState gameState;
+    private final Screen screen;
+    
+    public Game(Screen screen) {
+        this.screen = screen;
+        this.gameState = new MainMenu(screen);
+    }
+    
+    public void draw() {
+        this.gameState.draw();
+    }
+    
+    public void handleInput(KeyStroke key) {
+        this.gameState.handleInput(key);
     }
 }
