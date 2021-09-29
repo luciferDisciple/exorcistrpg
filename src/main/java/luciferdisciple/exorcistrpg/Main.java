@@ -51,22 +51,18 @@ public class Main {
             screen.setCursorPosition(null); // hide the cursor
             screen.startScreen();
             screen.refresh();
-            boolean exitRequested = false;
             Game game = new Game(screen);
             game.draw();
             screen.refresh();
             
             // game loop begining
-            while (!exitRequested) {
+            while (!game.isExitRequested()) {
                 KeyStroke key = screen.pollInput();
                 if (key == null)
                     continue;
-                else if (key.getKeyType() == KeyType.Escape)
-                    exitRequested = true;
-                else
-                    game.handleInput(key);
-                    game.draw();
-                    screen.refresh();
+                game.handleInput(key);
+                game.draw();
+                screen.refresh();
             }
             // game loop end
         } catch (IOException e) {

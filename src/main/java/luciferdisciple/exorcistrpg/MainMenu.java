@@ -6,6 +6,7 @@ import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.screen.Screen;
+import java.util.function.Function;
 
 /**
  *
@@ -13,29 +14,22 @@ import com.googlecode.lanterna.screen.Screen;
  */
 public class MainMenu implements GameState {
     
-    enum MainMenuItem {
-        NewGame("New Game"),
-        Controls("Controls"),
-        Quit("Quit");
-        
-        private final String name;
-        
-        MainMenuItem(String name) {
-            this.name = name;
-        }
-        
-        public String nameToDisplay() {
-            return " " + this.name + " ";
-        }
-    }
-    
-    private int currentItemIndex;
-    private final Screen screen;
     private final int ITEM_VERTICAL_OFFSET = 3;
     
-    public MainMenu(Screen screen) {
+    private final Game context;
+    private final Screen screen;
+    private int currentItemIndex = 0;    
+    private MainMenuItem[] menuItems;
+    
+    public MainMenu(Game context, Screen screen) {
         this.screen = screen;
+        this.context = context;
         this.currentItemIndex = 0;
+        this.menuItems = new MainMenuItem[]{
+            new MainMenuItem("Nowa Gra", () -> this),
+            new MainMenuItem("Jak Grać?", () -> this),
+            new MainMenuItem("Wyjście", () -> new ExitGame(context))
+        };
     }
     
     @Override
@@ -46,24 +40,26 @@ public class MainMenu implements GameState {
         textGraphics.setForegroundColor(TextColor.ANSI.RED);
         
         MainMenuItem currentItem = getCurrentItem();
-        for (MainMenuItem item : MainMenuItem.values()) {
+        for (MainMenuItem item : menuItems) {
+            String label = " " + item.getLabel() + " ";
             if (item == currentItem) {
                 textGraphics.putString(
                     cursorPosition,
-                    item.nameToDisplay(),
+                    label,
                     SGR.REVERSE,
                     SGR.BOLD
                 );
             }
             else {
-                textGraphics.putString(cursorPosition, item.nameToDisplay(), SGR.BOLD);
+                textGraphics.putString(cursorPosition, label, SGR.BOLD);
             }
             cursorPosition = cursorPosition.withRelativeRow(ITEM_VERTICAL_OFFSET);
         }
     }
 
     @Override
-    public void handleInput(KeyStroke key) {
+    public GameState handleInput(KeyStroke key) {
+        GameState nextGameState = this;
         switch (key.getKeyType()) {
             case ArrowDown:
                 selectNextItem();
@@ -71,22 +67,21 @@ public class MainMenu implements GameState {
             case ArrowUp:
                 selectPreviousItem();
                 break;
+            case Enter:
+                nextGameState = getCurrentItem().confirm();
+                break;
             default:
                 break;
         }
-    }
-
-    @Override
-    public GameState getNextState() {
-        return this;
+        return nextGameState;
     }
     
     private MainMenuItem getCurrentItem() {
-        return MainMenuItem.values()[this.currentItemIndex];
+        return this.menuItems[this.currentItemIndex];
     }
     
     private void selectNextItem() {
-        int lastIndex = MainMenuItem.values().length - 1;
+        int lastIndex = this.menuItems.length - 1;
         if (this.currentItemIndex == lastIndex)
             return;
         this.currentItemIndex++;
@@ -96,5 +91,28 @@ public class MainMenu implements GameState {
         if (this.currentItemIndex == 0)
             return;
         this.currentItemIndex--;
+    }
+}
+
+@FunctionalInterface
+interface Supplier<T> {
+    T get();
+}
+
+class MainMenuItem {
+    private final String label;
+    private final Supplier<GameState> gameStateSupplier;
+    
+    public MainMenuItem(String label, Supplier<GameState> gameStateSupplier) {
+        this.label = label;
+        this.gameStateSupplier = gameStateSupplier;
+    }
+    
+    public String getLabel() {
+        return this.label;
+    }
+    
+    public GameState confirm() {
+        return this.gameStateSupplier.get();
     }
 }

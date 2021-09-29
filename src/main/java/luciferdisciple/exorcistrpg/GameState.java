@@ -8,6 +8,5 @@ import com.googlecode.lanterna.input.KeyStroke;
  */
 public interface GameState {
     public void draw();
-    public void handleInput(KeyStroke key);
-    public GameState getNextState();
+    public GameState handleInput(KeyStroke key);
 }

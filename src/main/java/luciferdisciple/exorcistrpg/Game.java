@@ -10,10 +10,11 @@ import com.googlecode.lanterna.screen.Screen;
 public class Game {
     private GameState gameState;
     private final Screen screen;
+    private boolean exitRequested;
     
     public Game(Screen screen) {
         this.screen = screen;
-        this.gameState = new MainMenu(screen);
+        this.gameState = new MainMenu(this, screen);
     }
     
     public void draw() {
@@ -21,6 +22,14 @@ public class Game {
     }
     
     public void handleInput(KeyStroke key) {
-        this.gameState.handleInput(key);
-    } 
+        this.gameState = this.gameState.handleInput(key);
+    }
+    
+    public boolean isExitRequested() {
+        return exitRequested;
+    }
+
+    void requestExit() {
+        exitRequested = true;
+    }
 }
