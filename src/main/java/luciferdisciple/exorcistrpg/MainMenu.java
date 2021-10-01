@@ -6,6 +6,7 @@ import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.screen.Screen;
+import com.googlecode.lanterna.terminal.Terminal;
 import static java.lang.Math.max;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,30 +15,37 @@ import java.util.List;
  *
  * @author Lucifer Disciple <piotr.momot420@gmail.com>
  */
-public class MainMenu implements GameState {
+public class MainMenu extends InteractiveApplication {
     
     private final int ITEM_VERTICAL_GAP = 2;
     private final int TITLE_BOTTOM_MARGIN = 4;
     private final String screenTitle = "EGZORCYSTA";
     
-    private final Game context;
-    private final Screen screen;
     private int currentItemIndex = 0;    
     private MainMenuItem[] menuItems;
     
-    public MainMenu(Game context, Screen screen) {
-        this.screen = screen;
-        this.context = context;
+    public MainMenu(Terminal terminal) {
+        super(terminal);
         this.menuItems = new MainMenuItem[]{
-            new MainMenuItem("Nowa Gra", () -> this),
-            new MainMenuItem("Jak Grać?", () -> this),
-            new MainMenuItem("Wyjście", () -> new ExitGame(context))
+            new MainMenuItem("Nowa Gra", this::noOp),
+            new MainMenuItem("Jak Grać?", this::noOp),
+            new MainMenuItem("Wyjście", super::stop)
         };
+    }
+
+    @Override
+    protected void initialize() {
+        
+    }
+
+    @Override
+    protected void update(long timeDelta) {
+        // It updates only when it receives keyboard input.
+        // It uoesn't care about passing time
     }
     
     @Override
-    public void draw() {
-        screen.clear();
+    protected void draw(Screen screen) {
         Rectangle termViewport = new Rectangle(0, 0,
             new RectangleDimensions(
                 screen.getTerminalSize().getColumns(),
@@ -80,8 +88,7 @@ public class MainMenu implements GameState {
     }
 
     @Override
-    public GameState handleInput(KeyStroke key) {
-        GameState nextGameState = this;
+    protected void receiveInput(KeyStroke key) {
         switch (key.getKeyType()) {
             case ArrowDown:
                 highlightNextMenuItem();
@@ -90,12 +97,11 @@ public class MainMenu implements GameState {
                 highlightPreviousMainMenuItem();
                 break;
             case Enter:
-                nextGameState = getCurrentItem().select();
+                getCurrentItem().executeAction();
                 break;
             default:
                 break;
         }
-        return nextGameState;
     }
     
     private MainMenuItem getCurrentItem() {
@@ -147,28 +153,27 @@ public class MainMenu implements GameState {
         int startingColumn = (container.dimensions().width() -  text.length()) / 2;
         textGraphics.putString(cursor.withColumn(startingColumn), text);
     }
-}
-
-@FunctionalInterface
-interface Supplier<T> {
-    T get();
+    
+    private void noOp() {
+        // no operation
+    }
 }
 
 class MainMenuItem {
     private final String label;
-    private final Supplier<GameState> gameStateSupplier;
+    private final Runnable callback;
     
-    public MainMenuItem(String label, Supplier<GameState> gameStateSupplier) {
+    public MainMenuItem(String label, Runnable callback) {
         this.label = label;
-        this.gameStateSupplier = gameStateSupplier;
+        this.callback = callback;
     }
     
     public String getLabel() {
         return this.label;
     }
     
-    public GameState select() {
-        return this.gameStateSupplier.get();
+    public void executeAction() {
+        this.callback.run();
     }
 }
 
@@ -181,8 +186,6 @@ record Rectangle(int row, int col, RectangleDimensions dimensions) {
     }
     
     public Rectangle centeredIn(Rectangle container) {
-        int height = (container.dimensions.height() - this.dimensions.height()) / 2;
-        int width = (container.dimensions.width() - this.dimensions.width()) / 2;
         return new Rectangle(
             (container.dimensions.height() - this.dimensions.height()) / 2,
             (container.dimensions.width() - this.dimensions.width()) / 2,

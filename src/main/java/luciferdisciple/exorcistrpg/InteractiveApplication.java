@@ -2,6 +2,8 @@ package luciferdisciple.exorcistrpg;
 
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.screen.Screen;
+import com.googlecode.lanterna.screen.TerminalScreen;
+import com.googlecode.lanterna.terminal.Terminal;
 import java.io.IOException;
 
 /**
@@ -12,16 +14,19 @@ abstract public class InteractiveApplication {
     private static final long FRAMERATE = 30;
     private static final long FRAMETIME = 1000 / FRAMERATE;
     
-    private final Screen screen;
+    private final Terminal terminal;
     private long timeOfLastUpdateInMiliseconds;
     private boolean isOver;
     
-    public InteractiveApplication(Screen screen) {
-        this.screen = screen;
+    public InteractiveApplication(Terminal terminal) {
+        this.terminal = terminal;
     }
     
     public void run() throws IOException {
+        Screen screen = new TerminalScreen(this.terminal);
         initialize();
+        screen.startScreen();
+        screen.setCursorPosition(null);
         this.timeOfLastUpdateInMiliseconds = System.currentTimeMillis();
         while (!this.isOver) {
             long timeDelta = System.currentTimeMillis() - this.timeOfLastUpdateInMiliseconds;
@@ -31,10 +36,11 @@ abstract public class InteractiveApplication {
             if (timeDelta < FRAMETIME)
                 continue;
             update(timeDelta);
-            draw(this.screen);
+            draw(screen);
             screen.refresh();
             this.timeOfLastUpdateInMiliseconds = System.currentTimeMillis();
         }
+        screen.stopScreen();
     }
     
     protected final void stop() {

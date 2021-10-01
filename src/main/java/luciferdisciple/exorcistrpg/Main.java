@@ -25,7 +25,6 @@ package luciferdisciple.exorcistrpg;
 
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.graphics.TextGraphics;
-import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
@@ -43,24 +42,8 @@ public class Main {
 
         try {
             Terminal terminal = new DefaultTerminalFactory().createTerminal();
-            screen = new TerminalScreen(terminal);
-            screen.setCursorPosition(null); // hide the cursor
-            screen.startScreen();
-            screen.refresh();
-            Game game = new Game(screen);
-            game.draw();
-            screen.refresh();
-            
-            // game loop begining
-            while (!game.isExitRequested()) {
-                KeyStroke key = screen.pollInput();
-                if (key == null)
-                    continue;
-                game.handleInput(key);
-                game.draw();
-                screen.refresh();
-            }
-            // game loop end
+            InteractiveApplication app = new MainMenu(terminal);
+            app.run();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
