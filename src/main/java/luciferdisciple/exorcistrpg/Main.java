@@ -26,7 +26,6 @@ package luciferdisciple.exorcistrpg;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.screen.Screen;
-import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
 import java.io.IOException;
@@ -42,7 +41,7 @@ public class Main {
 
         try {
             Terminal terminal = new DefaultTerminalFactory().createTerminal();
-            InteractiveApplication app = new MainMenu(terminal);
+            InteractiveApplication app = new DungeonCrawlerGameLevel(terminal);
             app.run();
         } catch (IOException e) {
             e.printStackTrace();
