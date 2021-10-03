@@ -26,8 +26,8 @@ public class GameLevelWindow extends GameWindow {
     public void draw(Screen screen) {
         TextGraphics staticLevelElementGraphics = screen.newTextGraphics();
         TerminalSize viewportSize = screen.getTerminalSize();
-        for (int row = 0; row < viewportSize.getRows(); row++) {
-            for (int col = 0; col < viewportSize.getColumns(); col++) {
+        for (int row = 0; row < viewportSize.getRows() && row < this.world.length; row++) {
+            for (int col = 0; col < viewportSize.getColumns() && col < this.world[0].length; col++) {
                 staticLevelElementGraphics.putString(col, row, this.world[row][col].getGlyph());
             }
         }
