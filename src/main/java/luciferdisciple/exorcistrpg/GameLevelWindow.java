@@ -11,13 +11,13 @@ import com.googlecode.lanterna.screen.Screen;
  *
  * @author Lucifer Disciple <piotr.momot420@gmail.com>
  */
-public class DungeonCrawlerGameLevel extends GameWindow {
+public class GameLevelWindow extends GameWindow {
 
     private LevelElement[][] world;
     private final PlayerCharacter player = new PlayerCharacter(1, 1);
     
     
-    public DungeonCrawlerGameLevel(Game game) {
+    public GameLevelWindow(Game game) {
         super(game);
         generateWorld();
     }

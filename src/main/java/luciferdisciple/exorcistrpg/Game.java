@@ -17,7 +17,7 @@ final class Game extends InteractiveApplication {
     
     public Game(Terminal terminal) throws IOException {
         super(terminal);
-        openWindowInForeground(new MainMenu(this));
+        openWindowInForeground(new MainMenuWindow(this));
     }
     
     @Override

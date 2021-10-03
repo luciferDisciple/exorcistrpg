@@ -14,7 +14,7 @@ import java.util.List;
  *
  * @author Lucifer Disciple <piotr.momot420@gmail.com>
  */
-public class MainMenu extends GameWindow {
+public class MainMenuWindow extends GameWindow {
     
     private final int ITEM_VERTICAL_GAP = 2;
     private final int TITLE_BOTTOM_MARGIN = 4;
@@ -23,12 +23,12 @@ public class MainMenu extends GameWindow {
     private int currentItemIndex = 0;    
     private MainMenuItem[] menuItems;
     
-    public MainMenu(Game game) {
+    public MainMenuWindow(Game game) {
         super(game);
         this.menuItems = new MainMenuItem[]{
             new MainMenuItem(
                 "Nowa Gra",
-                () -> super.openWindow(new DungeonCrawlerGameLevel(game))
+                () -> super.openWindow(new GameLevelWindow(game))
             ),
             new MainMenuItem("Jak Grać?", this::noOp),
             new MainMenuItem("Wyjście", this::closeThisWindow)
