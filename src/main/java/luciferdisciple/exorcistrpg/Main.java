@@ -23,8 +23,6 @@
  */
 package luciferdisciple.exorcistrpg;
 
-import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
@@ -37,31 +35,12 @@ import java.io.IOException;
 public class Main {
 
     public static void main(String[] args) {
-        Screen screen = null;
-
         try {
             Terminal terminal = new DefaultTerminalFactory().createTerminal();
-            InteractiveApplication app = new DungeonCrawlerGameLevel(terminal);
+            InteractiveApplication app = new Game(terminal);
             app.run();
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            if (screen != null) {
-                try {
-                    screen.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }
-    }
-
-    public static void putStringCentered(TextGraphics textGraphics, String s) {
-        TerminalSize termSize = textGraphics.getSize();
-        int rows = termSize.getRows();
-        int cols = termSize.getColumns();
-        int row = rows / 2;
-        int col = (cols - s.length()) / 2;
-        textGraphics.putString(col, row, s);
     }
 }

@@ -6,30 +6,24 @@ import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.screen.Screen;
-import com.googlecode.lanterna.terminal.Terminal;
 
 /**
  *
  * @author Lucifer Disciple <piotr.momot420@gmail.com>
  */
-public class DungeonCrawlerGameLevel extends InteractiveApplication {
+public class DungeonCrawlerGameLevel extends GameWindow {
 
     private LevelElement[][] world;
     private final PlayerCharacter player = new PlayerCharacter(1, 1);
     
     
-    public DungeonCrawlerGameLevel(Terminal terminal) {
-        super(terminal);
+    public DungeonCrawlerGameLevel(Game game) {
+        super(game);
         generateWorld();
     }
 
     @Override
-    protected void initialize() {
-        
-    }
-
-    @Override
-    protected void draw(Screen screen) {
+    public void draw(Screen screen) {
         TextGraphics staticLevelElementGraphics = screen.newTextGraphics();
         TerminalSize viewportSize = screen.getTerminalSize();
         for (int row = 0; row < viewportSize.getRows(); row++) {
@@ -47,15 +41,15 @@ public class DungeonCrawlerGameLevel extends InteractiveApplication {
     }
 
     @Override
-    protected void update(long timeDelta) {
+    public void update(long timeDelta) {
         
     }
 
     @Override
-    protected void receiveInput(KeyStroke keyStroke) {
+    public void receiveInput(KeyStroke keyStroke) {
         switch(keyStroke.getKeyType()) {
             case Escape:
-                stop();
+                closeThisWindow();
                 break;
             case ArrowUp:
                 this.player.moveUp();

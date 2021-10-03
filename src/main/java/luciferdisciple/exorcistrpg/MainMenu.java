@@ -6,7 +6,6 @@ import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.screen.Screen;
-import com.googlecode.lanterna.terminal.Terminal;
 import static java.lang.Math.max;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,7 @@ import java.util.List;
  *
  * @author Lucifer Disciple <piotr.momot420@gmail.com>
  */
-public class MainMenu extends InteractiveApplication {
+public class MainMenu extends GameWindow {
     
     private final int ITEM_VERTICAL_GAP = 2;
     private final int TITLE_BOTTOM_MARGIN = 4;
@@ -24,28 +23,26 @@ public class MainMenu extends InteractiveApplication {
     private int currentItemIndex = 0;    
     private MainMenuItem[] menuItems;
     
-    public MainMenu(Terminal terminal) {
-        super(terminal);
+    public MainMenu(Game game) {
+        super(game);
         this.menuItems = new MainMenuItem[]{
-            new MainMenuItem("Nowa Gra", this::noOp),
+            new MainMenuItem(
+                "Nowa Gra",
+                () -> super.openWindow(new DungeonCrawlerGameLevel(game))
+            ),
             new MainMenuItem("Jak Grać?", this::noOp),
-            new MainMenuItem("Wyjście", super::stop)
+            new MainMenuItem("Wyjście", this::closeThisWindow)
         };
     }
 
     @Override
-    protected void initialize() {
-        
-    }
-
-    @Override
-    protected void update(long timeDelta) {
+    public void update(long timeDelta) {
         // It updates only when it receives keyboard input.
         // It uoesn't care about passing time
     }
     
     @Override
-    protected void draw(Screen screen) {
+    public void draw(Screen screen) {
         Rectangle termViewport = new Rectangle(0, 0,
             new RectangleDimensions(
                 screen.getTerminalSize().getColumns(),
@@ -88,7 +85,7 @@ public class MainMenu extends InteractiveApplication {
     }
 
     @Override
-    protected void receiveInput(KeyStroke key) {
+    public void receiveInput(KeyStroke key) {
         switch (key.getKeyType()) {
             case ArrowDown:
                 highlightNextMenuItem();
