@@ -6,6 +6,8 @@ import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.screen.Screen;
+import java.awt.Point;
+import java.awt.Rectangle;
 
 /**
  *
@@ -23,21 +25,59 @@ public class GameLevelWindow extends GameWindow {
     }
 
     @Override
-    public void draw(Screen screen) {
-        TextGraphics staticLevelElementGraphics = screen.newTextGraphics();
+    public void draw(Screen screen) {        
         TerminalSize viewportSize = screen.getTerminalSize();
-        for (int row = 0; row < viewportSize.getRows() && row < this.world.length; row++) {
-            for (int col = 0; col < viewportSize.getColumns() && col < this.world[0].length; col++) {
-                staticLevelElementGraphics.putString(col, row, this.world[row][col].getGlyph());
+        Point playerWorldPosition = new Point(this.player.getColumn(), this.player.getRow());
+        Rectangle viewport = new Rectangle(viewportSize.getColumns(), viewportSize.getRows());
+        viewport = newRectangleCenteredAtPoint(viewport, playerWorldPosition);
+        
+        // don't let the viewport (camera) move past the left or top world
+        // boundry:
+        if (viewport.getX() < 0)
+            viewport.x = 0;
+        if (viewport.getY() < 0)
+            viewport.y = 0;
+        
+        Point worldBottomRightVertex = new Point(
+            world[0].length,
+            world.length
+        );
+        
+        // don't let the viewport (camera) move past the right or bottom world
+        // boundry:
+        if (viewport.getMaxX() > worldBottomRightVertex.x) {
+            viewport.translate(worldBottomRightVertex.x - (int) viewport.getMaxX(), 0);
+        }
+        if (viewport.getMaxY() > worldBottomRightVertex.y) {
+            viewport.translate(0, worldBottomRightVertex.y - (int) viewport.getMaxY());
+        }
+        
+        // draw the world:
+        TextGraphics staticLevelElementGraphics = screen.newTextGraphics();
+        
+        for (int row = 0; row < viewport.height; row++) {
+            for (int col = 0; col < viewport.width; col++) {
+                Point worldLocation = worldCoordsFromScreenCoords(viewport, new Point(col, row));
+                staticLevelElementGraphics.putString(
+                    col,
+                    row,
+                    this.world[worldLocation.y][worldLocation.x].getGlyph()
+                );
             }
         }
+        
+        // draw the player character:
         
         TextGraphics playerCharacterStyle = screen.newTextGraphics()
             .setForegroundColor(TextColor.ANSI.GREEN_BRIGHT)
             .enableModifiers(SGR.BOLD);
         
-        playerCharacterStyle.putString(this.player.getColumn(),
-            this.player.getRow(), this.player.getGlyph());
+        Point playerScreenPosition = screenCoordsFromWorldCoords(viewport, playerWorldPosition);
+        playerCharacterStyle.putString(
+            playerScreenPosition.x,
+            playerScreenPosition.y,
+            this.player.getGlyph()
+        );
     }
 
     @Override
@@ -119,8 +159,25 @@ public class GameLevelWindow extends GameWindow {
 	"┃......................................┃                                                            ",
 	"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛                                                            "
     };
+    
+    private Rectangle newRectangleCenteredAtPoint(Rectangle srcRectangle, Point dstCenter) {
+        Rectangle dstRectangle = new Rectangle(srcRectangle);
+        dstRectangle.translate(
+            dstCenter.x - (int) srcRectangle.getCenterX(),
+            dstCenter.y - (int) srcRectangle.getCenterY()
+        );
+        return dstRectangle;
+    }
+    
+    private Point screenCoordsFromWorldCoords(Rectangle viewport, Point worldPoint) {
+        return new Point(worldPoint.x - viewport.x, worldPoint.y - viewport.y);
+    }
+    
+    private Point worldCoordsFromScreenCoords(Rectangle viewport, Point screenPoint) {
+        return new Point(screenPoint.x + viewport.x, screenPoint.y + viewport.y);
+    }
 }
-
+        
 class LevelElement {  
     
     private static final LevelElement wallVertical = new LevelElement("┃");
