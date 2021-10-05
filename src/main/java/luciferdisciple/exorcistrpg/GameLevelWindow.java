@@ -16,7 +16,7 @@ import java.util.Iterator;
 public class GameLevelWindow extends GameWindow {
 
     private final World world;
-    private final PlayerCharacter player = new PlayerCharacter(1, 23);
+    private final PlayerCharacter player = new PlayerCharacter(6, 2);
     
     public GameLevelWindow(Game game) {
         super(game);
@@ -168,15 +168,12 @@ public class GameLevelWindow extends GameWindow {
             @Override
             public Iterator<Point> iterator() {
                 return new Iterator<Point>() {
-                        private int currentX, currentY, destinationX, destinationY;
-
-                        {
-                            currentX = rectangle.x;
-                            currentY = rectangle.y;
-                            destinationX = (int) rectangle.getMaxX();
-                            destinationY = (int) rectangle.getMaxY();
-                        }
-
+                        
+                        private int currentX = rectangle.x;
+                        private int currentY = rectangle.y;
+                        private final int destinationX = (int) rectangle.getMaxX();
+                        private final int destinationY = (int) rectangle.getMaxY();
+                        
                         @Override
                         public boolean hasNext() {
                             return currentY < destinationY;
