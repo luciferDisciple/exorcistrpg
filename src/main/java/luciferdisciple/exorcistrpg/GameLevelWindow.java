@@ -1,13 +1,13 @@
 package luciferdisciple.exorcistrpg;
 
 import com.googlecode.lanterna.SGR;
-import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.screen.Screen;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.util.Iterator;
 
 /**
  *
@@ -15,20 +15,22 @@ import java.awt.Rectangle;
  */
 public class GameLevelWindow extends GameWindow {
 
-    private LevelElement[][] world;
-    private final PlayerCharacter player = new PlayerCharacter(1, 1);
-    
+    private final World world;
+    private final PlayerCharacter player = new PlayerCharacter(1, 23);
     
     public GameLevelWindow(Game game) {
         super(game);
-        generateWorld();
+        this.world = new World(this.worldEncodedAsTextLines);
     }
 
     @Override
-    public void draw(Screen screen) {        
-        TerminalSize viewportSize = screen.getTerminalSize();
+    public void draw(Screen screen) {
+        Rectangle screenRectangle = new Rectangle(
+            screen.getTerminalSize().getColumns(),
+            screen.getTerminalSize().getRows()
+        );
         Point playerWorldPosition = new Point(this.player.getColumn(), this.player.getRow());
-        Rectangle viewport = new Rectangle(viewportSize.getColumns(), viewportSize.getRows());
+        Rectangle viewport = new Rectangle(screenRectangle);
         viewport = newRectangleCenteredAtPoint(viewport, playerWorldPosition);
         
         // don't let the viewport (camera) move past the left or top world
@@ -39,8 +41,8 @@ public class GameLevelWindow extends GameWindow {
             viewport.y = 0;
         
         Point worldBottomRightVertex = new Point(
-            world[0].length,
-            world.length
+            this.world.getWidth(),
+            this.world.getHeight()
         );
         
         // don't let the viewport (camera) move past the right or bottom world
@@ -54,16 +56,13 @@ public class GameLevelWindow extends GameWindow {
         
         // draw the world:
         TextGraphics staticLevelElementGraphics = screen.newTextGraphics();
-        
-        for (int row = 0; row < viewport.height; row++) {
-            for (int col = 0; col < viewport.width; col++) {
-                Point worldLocation = worldCoordsFromScreenCoords(viewport, new Point(col, row));
-                staticLevelElementGraphics.putString(
-                    col,
-                    row,
-                    this.world[worldLocation.y][worldLocation.x].getGlyph()
-                );
-            }
+        for (Point screenLocation : allPoints(screenRectangle)) {
+            Point worldLocation = worldCoordsFromScreenCoords(viewport, screenLocation);
+            staticLevelElementGraphics.putString(
+                screenLocation.x,
+                screenLocation.y,
+                this.world.getLevelElement(worldLocation).getGlyph()
+            );
         }
         
         // draw the player character:
@@ -105,19 +104,6 @@ public class GameLevelWindow extends GameWindow {
                 break;
             default:
                 break;
-        }
-    }
-    
-    private void generateWorld() {
-        int world_height = this.worldEncodedAsTextLines.length;
-        int world_width  = this.worldEncodedAsTextLines[0].length();
-        this.world = new LevelElement[world_height][world_width];
-        for (int row = 0; row < world_height; row++) {
-            // https://stackoverflow.com/a/63204504/13168106
-            String[] glyphs = worldEncodedAsTextLines[row].split("(?<=.)");
-            for (int col = 0; col < world_width; col++) {
-                this.world[row][col] = LevelElement.fromGlyph(glyphs[col]);
-            }
         }
     }
     
@@ -176,9 +162,48 @@ public class GameLevelWindow extends GameWindow {
     private Point worldCoordsFromScreenCoords(Rectangle viewport, Point screenPoint) {
         return new Point(screenPoint.x + viewport.x, screenPoint.y + viewport.y);
     }
+    
+    private Iterable<Point> allPoints(Rectangle rectangle) {
+        return new Iterable<Point>() {
+            @Override
+            public Iterator<Point> iterator() {
+                return new Iterator<Point>() {
+                        private int currentX, currentY, destinationX, destinationY;
+
+                        {
+                            currentX = rectangle.x;
+                            currentY = rectangle.y;
+                            destinationX = (int) rectangle.getMaxX();
+                            destinationY = (int) rectangle.getMaxY();
+                        }
+
+                        @Override
+                        public boolean hasNext() {
+                            return currentY < destinationY;
+                        }
+
+                        @Override
+                        public Point next() {
+                            Point currentPoint = new Point(currentX, currentY);
+                            currentX++;
+                            if (currentX > destinationX)
+                                moveToNextRow();
+                            return currentPoint;
+                        }
+
+                        private void moveToNextRow() {
+                            currentY++;
+                            currentX = rectangle.x;
+                        }
+                    };
+                }
+            };
+    }
 }
         
 class LevelElement {  
+    
+    public static final LevelElement EMPTY = new LevelElement(" ");
     
     private static final LevelElement wallVertical = new LevelElement("┃");
     private static final LevelElement wallHorizontal = new LevelElement("━");
@@ -187,7 +212,6 @@ class LevelElement {
     private static final LevelElement wallLeftDown = new LevelElement("┓");
     private static final LevelElement wallRightDown = new LevelElement("┏");
     private static final LevelElement ground = new LevelElement(".");
-    private static final LevelElement emptySpace = new LevelElement(" ");
     private static final LevelElement unknown = new LevelElement("?");
     
     private final String glyph;
@@ -200,7 +224,7 @@ class LevelElement {
         if (glyph.equals("┓")) return wallLeftDown;
         if (glyph.equals("┏")) return wallRightDown;
         if (glyph.equals(".")) return ground;
-        if (glyph.equals(" ")) return emptySpace;
+        if (glyph.equals(" ")) return EMPTY;
         return unknown;
     }
     
@@ -218,7 +242,7 @@ class PlayerCharacter {
     private int row;
     private int col;
     
-    public PlayerCharacter(int row, int col) {
+    public PlayerCharacter(int col, int row) {
         this.row = row;
         this.col = col;
     }
@@ -230,4 +254,60 @@ class PlayerCharacter {
     public void moveDown() {this.row++;}
     public void moveLeft() {this.col--;}
     public void moveRight() {this.col++;}
+}
+
+class World {
+    
+    private LevelElement[][] staticLevelElements;
+    
+    public World(String[] worldEncodedAsLinesOfText) {
+        this.staticLevelElements = decodeWorld(worldEncodedAsLinesOfText);
+    }
+    
+    public LevelElement getLevelElement(Point location) {
+        return getLevelElement(location.x, location.y);
+    }
+    
+    public LevelElement getLevelElement(int x, int y) {
+        boolean indexOutOfBounds = (x >= getWidth()) || (y >= getHeight());
+        if (indexOutOfBounds)
+            return LevelElement.EMPTY;
+        LevelElement arrayItemAtRequestedIndex = this.staticLevelElements[x][y];
+        if (arrayItemAtRequestedIndex == null)
+            return LevelElement.EMPTY;
+        return arrayItemAtRequestedIndex;
+    }
+    
+    public int getWidth() {
+        return this.staticLevelElements.length;
+    }
+    
+    public int getHeight() {
+        return this.staticLevelElements[0].length;
+    }
+    
+    private LevelElement[][] decodeWorld(String[] worldEncodedAsLinesOfText) {
+        int linesCount = worldEncodedAsLinesOfText.length;
+        int lengthOfLongestLine = worldEncodedAsLinesOfText[0].length();
+        for (String line : worldEncodedAsLinesOfText) {
+            if (line.length() > lengthOfLongestLine)
+                lengthOfLongestLine = line.length();
+        }
+        
+        int width  = lengthOfLongestLine;
+        int height = linesCount;
+        
+        LevelElement[][] decodedStaticLevelElements = new LevelElement[width][height];
+        
+        for (int lineNumber = 0; lineNumber < linesCount; lineNumber++) {
+            String line = worldEncodedAsLinesOfText[lineNumber];
+            // https://stackoverflow.com/a/63204504/13168106
+            String[] glyphs = line.split("(?<=.)");
+            for (int col = 0; col < glyphs.length; col++) {
+                decodedStaticLevelElements[col][lineNumber] = LevelElement.fromGlyph(glyphs[col]);
+            }
+        }
+        
+        return decodedStaticLevelElements;
+    }
 }
