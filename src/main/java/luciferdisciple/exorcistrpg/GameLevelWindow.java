@@ -16,7 +16,7 @@ import java.util.Iterator;
 public class GameLevelWindow extends GameWindow {
 
     private final World world;
-    private final PlayerCharacter player = new PlayerCharacter(6, 2);
+    private final Hero player = new Hero(6, 2);
     
     public GameLevelWindow(Game game) {
         super(game);
@@ -91,59 +91,108 @@ public class GameLevelWindow extends GameWindow {
                 closeThisWindow();
                 break;
             case ArrowUp:
-                this.player.moveUp();
+                tryMovePlayerUp();
                 break;
             case ArrowDown:
-                this.player.moveDown();
+                tryMovePlayerDown();
                 break;
             case ArrowLeft:
-                this.player.moveLeft();
+                tryMovePlayerLeft();
                 break;
             case ArrowRight:
-                this.player.moveRight();
+                tryMovePlayerRight();
                 break;
             default:
                 break;
         }
     }
     
+    private void tryMovePlayerUp() {
+        LevelElement elementAbovePlayer = this.world.getLevelElement(
+            this.player.getColumn(),
+            this.player.getRow() - 1
+        );
+        if (!elementAbovePlayer.isObstacle())
+            this.player.moveUp();
+    }
+    
+    private void tryMovePlayerDown() {
+        LevelElement elementBelowPlayer = this.world.getLevelElement(
+            this.player.getColumn(),
+            this.player.getRow() + 1
+        );
+        if (!elementBelowPlayer.isObstacle())
+            this.player.moveDown();
+    }
+    
+    private void tryMovePlayerRight() {
+        LevelElement elementToTheRightOfPlayer = this.world.getLevelElement(
+            this.player.getColumn() + 1,
+            this.player.getRow()
+        );
+        if (!elementToTheRightOfPlayer.isObstacle())
+            this.player.moveRight();
+    }
+    
+    private void tryMovePlayerLeft() {
+        LevelElement elementToTheLeftOfPlayer = this.world.getLevelElement(
+            this.player.getColumn() - 1,
+            this.player.getRow()
+        );
+        if (!elementToTheLeftOfPlayer.isObstacle())
+            this.player.moveLeft();
+    }
 
     final private String[] worldEncodedAsTextLines = {
-	"┏━━━━━━━━━━━━┓                                                                        ┏━━━━━━━━━━━━┓",
-	"┃............┃                                                                        ┃............┃",
-	"┃............┃                                                                        ┃............┃",
-	"┃............┃                                                                        ┃............┃",
-	"┃............┃                                                                        ┃............┃",
-	"┗━━━━┓..┏━━━━┛                                                                        ┗━━━━┓..┏━━━━┛",
-	"     ┃..┃                                                                                  ┃..┃     ",
-	"┏━━━━┛..┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛..┃     ",
-	"┃.............................................................................................┃     ",
-	"┃......................................┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛     ",
-	"┃......................................┃                                                            ",
-	"┃......................................┃                                                            ",
-	"┃......................................┃                                                            ",
-	"┃......................................┃                                                            ",
-	"┃......................................┃                                                            ",
-	"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┓..┏━━━━━━━┛                                                            ",
-	"                            ┃..┃                                                                    ",
-	"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┛..┗━━━━━━━┓                                                            ",
-	"┃......................................┃                                                            ",
-	"┃..┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓..┃                                                            ",
-	"┃..┃                                ┃..┃                                                            ",
-	"┃..┃  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━┓  ┃..┃                                                            ",
-	"┃..┃  ┃..........................┃  ┃..┃                                                            ",
-	"┃..┃  ┃..........................┃  ┃..┃                                                            ",
-	"┃..┃  ┃..........................┃  ┃..┃                                                            ",
-	"┃..┗━━┛..........................┗━━┛..┃                                                            ",
-	"┃......................................┃                                                            ",
-	"┃..┏━━┓..........................┏━━┓..┃                                                            ",
-	"┃..┃  ┃..........................┃  ┃..┃                                                            ",
-	"┃..┃  ┃..........................┃  ┃..┃                                                            ",
-	"┃..┃  ┗━━━━━━━━━━━┓..┏━━━━━━━━━━━┛  ┃..┃                                                            ",
-	"┃..┃              ┃  ┃              ┃..┃                                                            ",
-	"┃..┗━━━━━━━━━━━━━━┛..┗━━━━━━━━━━━━━━┛..┃                                                            ",
-	"┃......................................┃                                                            ",
-	"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛                                                            "
+        "┏━━━━━━━━━━━━┓                                                                        ┏━━━━━━━━━━━━┓  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓",
+        "┃............┃                                                                        ┃............┃  ┃..............................┃",
+        "┃............┃                                                                        ┃............┃  ┃..............................┃",
+        "┃............┃                                                                        ┃............┃  ┃..............................┃",
+        "┃............┃                                                                        ┃............┃  ┃..............................┃",
+        "┗━━━━┓..┏━━━━┛                                                                        ┗━━━━┓..┏━━━━┛  ┃..............................┃",
+        "     ┃..┃                                                                                  ┃..┃       ┃..............................┃",
+        "┏━━━━┛..┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛..┃       ┃..............................┃",
+        "┃.............................................................................................┃       ┃..............................┃",
+        "┃......................................┏━━━┓..┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛       ┗━━━━━━━━━━━━━┓..┏━━━━━━━━━━━━━┛",
+        "┃......................................┃   ┃..┃                                                                     ┃..┃              ",
+        "┃......................................┃   ┃..┃                                                                     ┃..┃              ",
+        "┃......................................┃   ┃..┃     ┏━━━━━━━━━━━━┓     ┏━━━━━━━━━━━━┓     ┏━━━━━━━━━━━━┓            ┃..┃              ",
+        "┃......................................┃   ┃..┃     ┃............┃     ┃............┃     ┃............┃            ┃..┃              ",
+        "┃......................................┃   ┃..┃     ┃..┏━━━━━━━━━┛     ┃..┏━━━━━━━━━┛     ┃..┏━━━━━━━━━┛            ┃..┃              ",
+        "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┓..┏━━━━━━━┛   ┃..┃     ┃..┃               ┃..┃               ┃..┃                      ┃..┃              ",
+        "                            ┃..┃           ┃..┃     ┃..┃               ┃..┃               ┃..┃                      ┃..┃              ",
+        "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┛..┗━━━━━━━┓   ┃..┃     ┃..┗━━━━━━━━━┓     ┃..┗━━━━━━━━━┓     ┃..┗━━━━━━━━━┓            ┃..┃              ",
+        "┃......................................┃   ┃..┃     ┃............┃     ┃............┃     ┃............┃            ┃..┃              ",
+        "┃..┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓..┃   ┃..┃     ┃..┏━━━━━━┓..┃     ┃..┏━━━━━━┓..┃     ┃..┏━━━━━━┓..┃            ┃..┃              ",
+        "┃..┃                                ┃..┃   ┃..┃     ┃..┃      ┃..┃     ┃..┃      ┃..┃     ┃..┃      ┃..┃            ┃..┃              ",
+        "┃..┃  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━┓  ┃..┃   ┃..┃     ┃..┃      ┃..┃     ┃..┃      ┃..┃     ┃..┃      ┃..┃            ┃..┃              ",
+        "┃..┃  ┃..........................┃  ┃..┃   ┃..┃     ┃..┗━━━━━━┛..┃     ┃..┗━━━━━━┛..┃     ┃..┗━━━━━━┛..┃            ┃..┃              ",
+        "┃..┃  ┃..........................┃  ┃..┃   ┃..┃     ┃............┃     ┃............┃     ┃............┃            ┃..┃              ",
+        "┃..┃  ┃..........................┃  ┃..┃   ┃..┃     ┗━━━━━━━━━━━━┛     ┗━━━━━━━━━━━━┛     ┗━━━━━━━━━━━━┛            ┃..┃              ",
+        "┃..┗━━┛..........................┗━━┛..┃   ┃..┃                                                                     ┃..┃              ",
+        "┃......................................┃   ┃..┃                                                                     ┃..┃              ",
+        "┃..┏━━┓..........................┏━━┓..┃   ┃..┃                                                                     ┃..┃              ",
+        "┃..┃  ┃..........................┃  ┃..┃   ┃..┃                                                                     ┃..┃              ",
+        "┃..┃  ┃..........................┃  ┃..┃   ┃..┃                                                                     ┃..┃              ",
+        "┃..┃  ┗━━━━━━━━━━━┓..┏━━━━━━━━━━━┛  ┃..┃   ┃..┃                                                                     ┃..┃              ",
+        "┃..┃              ┃..┃              ┃..┃   ┃..┃                                                                     ┃..┃              ",
+        "┃..┗━━━━━━━━━━━━━━┛..┗━━━━━━━━━━━━━━┛..┃   ┃..┃                                                                     ┃..┃              ",
+        "┃......................................┃   ┃..┃                                                                     ┃..┃              ",
+        "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛   ┃..┃                                                                     ┃..┃              ",
+        "                                           ┃..┃                                                                     ┃..┃              ",
+        "                   ┏━━━┓                   ┃..┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛..┃              ",
+        "                   ┃...┃                   ┃...........................................................................┃              ",
+        "                   ┃...┃                   ┃..┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓..┃              ",
+        "                   ┃...┃                   ┃..┃                                                                     ┃..┃              ",
+        "                   ┃...┃                   ┃..┃                                                                     ┃..┃              ",
+        "  ┏━━━━━━━━━━━━━━━━┛...┗━━━━━━━━━━━━━━━━━━━┛..┃                                                                     ┃..┃              ",
+        "  ┃...........................................┃                                                           ┏━━━━━━━━━┛..┗━━━━━━━━━┓    ",
+        "  ┗━━━━━━━━━━━━━━━━┓...┏━━━━━━━━━━━━━━━━━━━━━━┛                                                           ┃......................┃    ",
+        "                   ┃...┃                                                                                  ┃......................┃    ",
+        "                   ┃...┃                                                                                  ┃......................┃    ",
+        "                   ┃...┃                                                                                  ┃......................┃    ",
+        "                   ┃...┃                                                                                  ┃......................┃    ",
+        "                   ┗━━━┛                                                                                  ┗━━━━━━━━━━━━━━━━━━━━━━┛    "
     };
     
     private Rectangle newRectangleCenteredAtPoint(Rectangle srcRectangle, Point dstCenter) {
@@ -200,18 +249,19 @@ public class GameLevelWindow extends GameWindow {
         
 class LevelElement {  
     
-    public static final LevelElement EMPTY = new LevelElement(" ");
+    public static final LevelElement EMPTY = new LevelElement(" ", false);
     
-    private static final LevelElement wallVertical = new LevelElement("┃");
-    private static final LevelElement wallHorizontal = new LevelElement("━");
-    private static final LevelElement wallLeftUp = new LevelElement("┛");
-    private static final LevelElement wallRightUp = new LevelElement("┗");
-    private static final LevelElement wallLeftDown = new LevelElement("┓");
-    private static final LevelElement wallRightDown = new LevelElement("┏");
-    private static final LevelElement ground = new LevelElement(".");
-    private static final LevelElement unknown = new LevelElement("?");
+    private static final LevelElement wallVertical = new LevelElement("┃", true);
+    private static final LevelElement wallHorizontal = new LevelElement("━", true);
+    private static final LevelElement wallLeftUp = new LevelElement("┛", true);
+    private static final LevelElement wallRightUp = new LevelElement("┗", true);
+    private static final LevelElement wallLeftDown = new LevelElement("┓", true);
+    private static final LevelElement wallRightDown = new LevelElement("┏", true);
+    private static final LevelElement ground = new LevelElement(".", false);
+    private static final LevelElement unknown = new LevelElement("?", false);
     
     private final String glyph;
+    private final boolean isObstacle_;
     
     public static LevelElement fromGlyph(String glyph) {
         if (glyph.equals("┃")) return wallVertical;
@@ -225,21 +275,26 @@ class LevelElement {
         return unknown;
     }
     
-    private LevelElement(String glyph) {
+    private LevelElement(String glyph, boolean isObstacle) {
         this.glyph = glyph;
+        this.isObstacle_ = isObstacle;
     }
     
     public String getGlyph() {
         return this.glyph;
     }
+    
+    public boolean isObstacle() {
+        return this.isObstacle_;
+    }
 }
 
-class PlayerCharacter {
+class Hero {
     
     private int row;
     private int col;
     
-    public PlayerCharacter(int col, int row) {
+    public Hero(int col, int row) {
         this.row = row;
         this.col = col;
     }
